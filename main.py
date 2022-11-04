@@ -14,6 +14,7 @@ __version__ = "0.1"
 # IMPORTS
 import sys
 import argparse
+from classes import *
 
 
 # FUNCTIONS
@@ -47,6 +48,14 @@ def parse_command_line_args():
 
 def main():
     """Main function"""
+    # Parse command line arguments
+    args = parse_command_line_args()
+
+    # Create MutatedGene object
+    gene = MutatedGene(args.sequence, args.location, args.nucleotide)
+
+    # Create ProteinFamily object
+    protein_family = ProteinFamily(args.family)
     return 0
 
 
