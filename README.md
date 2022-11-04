@@ -20,8 +20,8 @@ SNP-Severity-Calculator
 ```
 
 ### / testdata
-This directory contains two protein family's protein sequences and one of the genes from the families as their coding DNA sequence.
-These can be used to test the functionality of the script and are used as defaults when no family and sequence is given by the user.
+This directory contains a protein family's protein sequences and one of the genes from the family as coding DNA sequence.
+The protein family can be used to test the functionality of the script and are used as defaults when no family and sequence is given by the user.
 
 ## Installation
 This script was created in, and for, Python 3.10, backwards compatibility is not guaranteed!
@@ -41,7 +41,6 @@ Examples:
 ```$python3 main.py 42 G --sequence testdata/ZCCHC17_C-Lupus_DNA.fasta --family testdata/ZCCHC17_Protein_Family.fasta```
 
 ## Useful links
-* [HomoloGene: KPNA3 Protein Family](https://www.ncbi.nlm.nih.gov/homologene/20520)
 * [HomoloGene: ZCCHC17 Protein Family](https://www.ncbi.nlm.nih.gov/homologene/32319)
 * [Biopython webpage](https://biopython.org/)
 
