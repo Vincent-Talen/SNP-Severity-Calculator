@@ -36,8 +36,13 @@ To use the SNP Severity Check, the `main.py` script has to be run from the termi
 For further help use the `-h` argument with the script like `python3 main.py -h`.  
 
 Examples:  
+```$python3 main.py 42 G```  
+```$python3 main.py 42 G -s testdata/ZCCHC17_C-Lupus_DNA.fasta -f testdata/ZCCHC17_Protein_Family.fasta```  
+```$python3 main.py 42 G --sequence testdata/ZCCHC17_C-Lupus_DNA.fasta --family testdata/ZCCHC17_Protein_Family.fasta```
 
 ## Useful links
+* [HomoloGene: KPNA3 Protein Family](https://www.ncbi.nlm.nih.gov/homologene/20520)
+* [HomoloGene: ZCCHC17 Protein Family](https://www.ncbi.nlm.nih.gov/homologene/32319)
 * [Biopython webpage](https://biopython.org/)
 
 ## Contact
