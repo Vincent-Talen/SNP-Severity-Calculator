@@ -9,7 +9,7 @@ SNP Severity Calculator
 
 # METADATA
 __author__ = "Vincent Talen"
-__version__ = "0.1"
+__version__ = "0.1.1"
 
 # IMPORTS
 import sys
@@ -31,6 +31,7 @@ def parse_command_line_args():
                         help="the location of where the SNP should be introduced")
     parser.add_argument("nucleotide",
                         type=str, metavar="snp_nucleotide",
+                        choices=["A", "a", "T", "t", "C", "c", "G", "g"],
                         help="the nucleotide the SNP should mutate to")
     parser.add_argument("-s", "--sequence",
                         type=str, metavar="sequence",
@@ -39,8 +40,8 @@ def parse_command_line_args():
     parser.add_argument("-f", "--family",
                         type=str, metavar="protein_family_file",
                         default="testdata/ZCCHC17_Protein_Family.fasta",
-                        help="a multi-fasta file or MSA file of the protein family "
-                             "the given genomic coding sequence is from")
+                        help="a multi-fasta file with protein sequences like normal or as multi sequence alignment, "
+                             "of the protein family the given genomic coding sequence belongs to")
 
     # Parse the arguments and return
     return parser.parse_args()
@@ -52,8 +53,7 @@ def main():
     args = parse_command_line_args()
 
     # Create MutatedGene object
-    gene = MutatedGene(args.sequence, args.location, args.nucleotide)
-
+    gene = MutatedGene(args.location, args.nucleotide, args.sequence)
     # Create ProteinFamily object
     protein_family = ProteinFamily(args.family)
     return 0
