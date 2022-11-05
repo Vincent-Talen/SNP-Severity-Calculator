@@ -4,3 +4,7 @@ __pycache__/
 
 # Mac generated
 .DS_Store
+
+# Other
+clustalo
+output/

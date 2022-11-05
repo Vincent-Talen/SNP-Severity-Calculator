@@ -9,59 +9,72 @@ SNP Severity Calculator
 
 # METADATA
 __author__ = "Vincent Talen"
-__version__ = "0.2"
+__version__ = "0.3"
 
 # IMPORTS
 import sys
-from Bio import SeqIO
+from math import ceil
+from Bio import SeqIO, AlignIO
 from Bio.Seq import Seq, MutableSeq
+from Bio.Align.Applications import ClustalOmegaCommandline
 
 
 # CLASSES
 class ProteinFamily:
     def __init__(self, protein_family_file):
-        self.proteins = self.__read_multi_fasta(protein_family_file)
+        self.new_msa_file = "output/msa.fasta"
+        self.alignment = self.__create_msa(protein_family_file)
 
-    @staticmethod
-    def __read_multi_fasta(multi_fasta_file):
-        return list(SeqIO.parse(multi_fasta_file, "fasta"))
+    def __create_msa(self, in_file):
+        # Create alignment
+        clustalomega_cline = ClustalOmegaCommandline(
+            "./clustalo", infile=in_file, outfile=self.new_msa_file,
+            verbose=True, auto=True, force=True
+        )
+        clustalomega_cline()
+
+        # Read alignment from file and return as alignment object
+        return AlignIO.read(self.new_msa_file, "fasta")
 
 
 class MutatedGene:
-    def __init__(self, snp_location, snp_nucleotide, sequence_file):
-        self.snp_location = snp_location
-        self.snp_nucleotide = snp_nucleotide
-        self.original_sequence = self.__read_from_fasta(sequence_file)
+    def __init__(self, snp_position, snp_nucleotide, sequence_file):
+        self.snp_position = snp_position
+        self.snp_nucleotide = snp_nucleotide.upper()
 
-        # Perform stuffs
+        # Load original sequence and create mutated sequence with SNP
+        self.original_sequence = self.__read_from_fasta(sequence_file)
         self.mutated_sequence = self.__create_mutated_sequence()
+
+        # Translate both sequences to protein
+        self.original_protein = self.original_sequence.translate()
+        self.mutated_protein = self.mutated_sequence.translate()
 
     def __read_from_fasta(self, sequence_file):
         sequence = SeqIO.read(sequence_file, "fasta").seq
-        if not 1 <= self.snp_location <= len(sequence):
-            msg = f"Given location ({self.snp_location}) is not a valid location on given sequence! " \
-                  f"Please give a location between 1 and length of given sequence: {len(sequence)}."
-            raise IndexError(msg)
+        if not 1 <= self.snp_position <= len(sequence):
+            print(f"ERROR!\tGiven position ({self.snp_position}) is not a valid position for the given sequence!\n"
+                  f"\tPlease give a position between 1 and the length of the given sequence: {len(sequence)}")
+            sys.exit(1)
         return sequence
 
     def __create_mutated_sequence(self):
-        old_nucleotide = self.original_sequence[self.snp_location-1].upper()
-        new_nucleotide = self.snp_nucleotide.upper()
-        # Raise ValueError if snp wouldn't create a nucleotide substitution
+        old_nucleotide = self.original_sequence[self.snp_position-1].upper()
+        
+        # Script can be stopped if nucleotide isn't changed
         if old_nucleotide == self.snp_nucleotide:
-            msg = f"Nucleotide substitution at location {self.snp_location} unsuccessful, " \
-                  f"nucleotide was already '{old_nucleotide}'!"
-            raise ValueError(msg)
+            print(f"Nucleotide substitution at position {self.snp_position} unsuccessful, "
+                  f"nucleotide was already '{old_nucleotide}'!")
+            sys.exit(0)
 
-        # Create MutableSeq object and substitute nucleotide at position given
+        # Create MutableSeq object and substitute nucleotide at the given position
         mutable_seq = MutableSeq(self.original_sequence)
-        mutable_seq[self.snp_location-1] = new_nucleotide
-        print(f"Nucleotide substitution at location {self.snp_location} successful! "
-              f"Mutation: '{old_nucleotide}' was substituted with '{new_nucleotide}'.")
+        mutable_seq[self.snp_position-1] = self.snp_nucleotide
+        print(f"Nucleotide substitution at position {self.snp_position} successful! "
+              f"Mutation: '{old_nucleotide}' was substituted with '{self.snp_nucleotide}'")
         return Seq(mutable_seq)
 
 
 class SeverityCalculator:
-    pass
     def __init__(self):
         pass

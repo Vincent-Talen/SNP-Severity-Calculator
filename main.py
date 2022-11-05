@@ -26,9 +26,9 @@ def parse_command_line_args():
                        (Defaults to sequence and family located in `/testdata` dir)""")
 
     # Add arguments
-    parser.add_argument("location",
-                        type=int, metavar="snp_location",
-                        help="the location of where the SNP should be introduced")
+    parser.add_argument("position",
+                        type=int, metavar="snp_position",
+                        help="the position of where the SNP should be introduced")
     parser.add_argument("nucleotide",
                         type=str, metavar="snp_nucleotide",
                         choices=["A", "a", "T", "t", "C", "c", "G", "g"],
@@ -53,7 +53,7 @@ def main():
     args = parse_command_line_args()
 
     # Create MutatedGene object
-    gene = MutatedGene(args.location, args.nucleotide, args.sequence)
+    gene = MutatedGene(args.position, args.nucleotide, args.sequence)
     # Create ProteinFamily object
     protein_family = ProteinFamily(args.family)
     return 0
