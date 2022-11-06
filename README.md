@@ -20,8 +20,8 @@ SNP-Severity-Calculator
 ```
 
 ### / testdata
-This directory contains a protein family's protein sequences and one of the genes from the family as coding DNA sequence.
-The protein family can be used to test the functionality of the script and are used as defaults when no family and sequence is given by the user.
+This directory contains protein families' protein sequences and a gene from each family as coding DNA sequence.
+These protein families can be used to test the functionality of the script and one is used as defaults when no family and sequence is given by the user.
 
 ## Installation
 This script was created in, and for, Python 3.10, backwards compatibility is not guaranteed!
@@ -58,6 +58,7 @@ Examples:
 
 ## Useful links
 * [HomoloGene: ZCCHC17 Protein Family](https://www.ncbi.nlm.nih.gov/homologene/32319)
+* [HomoloGene: HIST1H2BA Protein Family](https://www.ncbi.nlm.nih.gov/homologene/69356)
 * [Biopython webpage](https://biopython.org/)
 
 ## Contact
