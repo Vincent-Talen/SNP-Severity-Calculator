@@ -22,7 +22,7 @@ def parse_command_line_args():
     # Create ArgumentParser object
     parser = argparse.ArgumentParser(
         description="""Calculate the severity score of a given SNP in a given genomic coding sequence 
-                       based on conservation in its protein family.\n 
+                       based on amino acid conservation in its protein family.\n 
                        (Defaults to sequence and family located in `/testdata` dir)""")
 
     # Add arguments
@@ -53,9 +53,12 @@ def main():
     args = parse_command_line_args()
 
     # Create MutatedGene object
-    gene = MutatedGene(args.position, args.nucleotide, args.sequence)
+    mutated_gene = MutatedGene(args.position, args.nucleotide, args.sequence)
     # Create ProteinFamily object
     protein_family = ProteinFamily(args.family)
+
+    # Check severity of MutatedGene in ProteinFamily
+    protein_family.check_snp_severity(mutated_gene)
     return 0
 
 

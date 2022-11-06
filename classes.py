@@ -9,13 +9,14 @@ SNP Severity Calculator
 
 # METADATA
 __author__ = "Vincent Talen"
-__version__ = "0.4"
+__version__ = "0.5"
 
 # IMPORTS
 import sys
 from math import ceil
 from Bio import SeqIO, AlignIO
 from Bio.Seq import Seq, MutableSeq
+from Bio.SeqRecord import SeqRecord
 from Bio.Align.Applications import ClustalOmegaCommandline
 
 
@@ -32,8 +33,8 @@ class MutatedGene:
         self.mutated_sequence = self.__create_mutated_sequence()
 
         # Translate both sequences to protein
-        self.original_protein = self.original_sequence.translate()
-        self.mutated_protein = self.mutated_sequence.translate()
+        self.original_protein = self.original_sequence.translate().rstrip("*")
+        self.mutated_protein = self.mutated_sequence.translate().rstrip("*")
 
         # Script can be stopped if synonymous
         self.__synonymous_check()
@@ -75,9 +76,6 @@ class MutatedGene:
         original_aa = self.original_protein[self.snp_protein_pos - 1]
         mutated_aa = self.mutated_protein[self.snp_protein_pos - 1]
 
-class SeverityCalculator:
-    def __init__(self):
-        pass
         # If the 'mutated' amino acid is the same as the original stop the script
         if original_aa == mutated_aa:
             print(f"Synonymous! SNP mutation did not cause a change "
@@ -105,3 +103,63 @@ class ProteinFamily:
 
         # Read alignment from file and return as alignment object
         return AlignIO.read(out_file, "fasta")
+
+    @staticmethod
+    def __get_alignment_adjusted_position(aligned_sequence, desired_position):
+        position_without_gaps = 0
+        # For each position in the aligned sequence
+        for cur_pos, char in enumerate(aligned_sequence):
+            # If the character is not a gap it is an amino acid
+            if char != '-':
+                # If the position without gaps is the desired position; return
+                if position_without_gaps == desired_position:
+                    return cur_pos
+                # If not the desired position, count up one position
+                position_without_gaps += 1
+
+    @staticmethod
+    def __get_column_freq_dict(current_column) -> dict:
+        all_freq_dict = {}
+        for char in current_column:
+            if char in all_freq_dict:
+                all_freq_dict[char] += 1
+            else:
+                all_freq_dict[char] = 1
+        return all_freq_dict
+
+    def __align_mutated_protein(self, mutated_gene: MutatedGene):
+        # Create SeqRecord object for mutated gene protein sequence
+        mutated_protein_record = SeqRecord(
+            mutated_gene.mutated_protein,
+            id=mutated_gene.gene_info["id"] + ".WITH_SNP_MUTATION ",
+            name=mutated_gene.gene_info["name"],
+            description=mutated_gene.gene_info["description"]
+        )
+
+        # Filenames
+        combined_fasta_file = "output/combined_proteins.fasta"
+        combined_msa_file = "output/combined_msa.fasta"
+
+        # Create list with all records combined and write to file
+        all_records = list(self.alignment)
+        all_records.insert(0, mutated_protein_record)
+        SeqIO.write(all_records, combined_fasta_file, "fasta")
+
+        # Create new MSA and return aligned mutated protein sequence
+        combined_msa = self.__create_msa(combined_fasta_file, combined_msa_file)
+        return combined_msa[0].seq
+
+    def check_snp_severity(self, mutated_gene: MutatedGene):
+        # Align the mutated protein
+        aligned_protein = self.__align_mutated_protein(mutated_gene)
+
+        # Get adjusted position of snp in aligned sequence
+        unaligned_snp_pos = mutated_gene.snp_protein_pos - 1
+        aa_position = self.__get_alignment_adjusted_position(aligned_protein, unaligned_snp_pos)
+
+        # Get mutated amino acid and protein family frequency dict for affected column
+        mutated_aa = aligned_protein[aa_position]
+        affected_column = self.alignment[:, aa_position]
+        freq_dict = self.__get_column_freq_dict(affected_column)
+
+        # Score...
