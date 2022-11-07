@@ -42,6 +42,8 @@ def parse_command_line_args():
                         default="testdata/ZCCHC17_Protein_Family.fasta",
                         help="a multi-fasta file with protein sequences like normal or as multi sequence alignment, "
                              "of the protein family the given genomic coding sequence belongs to")
+    parser.add_argument("--show_all_frequencies", action='store_true',
+                        help="if this argument is used, the frequencies of amino acids for each position will be shown")
 
     # Parse the arguments and return
     return parser.parse_args()
@@ -59,6 +61,10 @@ def main():
 
     # Check severity of MutatedGene in ProteinFamily
     protein_family.check_snp_severity(mutated_gene)
+
+    # If user desires, print frequencies for all positions
+    if args.show_all_frequencies:
+        protein_family.print_all_frequencies()
     return 0
 
 

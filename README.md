@@ -49,9 +49,14 @@ The following Python packages are required for this project and should be instal
 To use the SNP Severity Check, the `main.py` script has to be run from the terminal.  
 For further help use the `-h` argument with the script like `python3 main.py -h`.  
 
-Examples:  
+### Examples:  
+Only giving SNP position and nucleotide (will default to protein family in /testdata)
 > $python3 main.py 42 G
 
+Also print the frequency of amino acids for each position
+> $python3 main.py 42 G --show_all_frequencies
+
+Use other protein family than default from /testdata (replace file path with your own files)
 > $python3 main.py 42 G -s testdata/ZCCHC17_C-Lupus_DNA.fasta -f testdata/ZCCHC17_Protein_Family.fasta
 
 > $python3 main.py 42 G --sequence testdata/ZCCHC17_C-Lupus_DNA.fasta --family testdata/ZCCHC17_Protein_Family.fasta

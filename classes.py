@@ -79,10 +79,14 @@ class MutatedGene:
         # If the 'mutated' amino acid is the same as the original stop the script
         if original_aa == mutated_aa:
             print(f"Synonymous! SNP mutation did not cause a change "
-                  f"of amino acid '{original_aa}' on position {self.snp_protein_pos}")
+                  f"in amino acid '{original_aa}' on position {self.snp_protein_pos}")
+            sys.exit(0)
+        elif mutated_aa == "*":
+            print(f"Nonsense non-synonymous! SNP mutation caused amino acid "
+                  f"'{original_aa}' on position {self.snp_protein_pos} to change to 'STOP'!")
             sys.exit(0)
         else:
-            print(f"Non-Synonymous! SNP mutation caused change of amino acid "
+            print(f"Missense non-synonymous! SNP mutation caused change of amino acid "
                   f"on position {self.snp_protein_pos}: '{original_aa}' to '{mutated_aa}'!")
 
 
@@ -105,7 +109,7 @@ class ProteinFamily:
         return AlignIO.read(out_file, "fasta")
 
     @staticmethod
-    def __get_alignment_adjusted_position(aligned_sequence, desired_position):
+    def __get_alignment_adjusted_position(aligned_sequence, desired_position) -> int:
         position_without_gaps = 0
         # For each position in the aligned sequence
         for cur_pos, char in enumerate(aligned_sequence):
@@ -118,16 +122,34 @@ class ProteinFamily:
                 position_without_gaps += 1
 
     @staticmethod
-    def __get_column_freq_dict(current_column) -> dict:
-        all_freq_dict = {}
-        for char in current_column:
-            if char in all_freq_dict:
-                all_freq_dict[char] += 1
-            else:
-                all_freq_dict[char] = 1
-        return all_freq_dict
+    def __normalize_freq_dict(freq_dict) -> dict:
+        normalized_freq_dict = dict()
+        # Calculate minimum value and value range for normalization
+        freq_min = list(freq_dict.values())[-1]
+        freq_range = list(freq_dict.values())[0] - freq_min
+        for aa, freq in freq_dict.items():
+            # Perform normalization for each amino acid frequency
+            normalized_freq = (freq - freq_min) / freq_range
+            normalized_freq_dict[aa] = normalized_freq
+        return normalized_freq_dict
 
-    def __align_mutated_protein(self, mutated_gene: MutatedGene):
+    @staticmethod
+    def __get_column_freq_dict(current_column) -> dict:
+        # Get dictionary with counts per amino acid
+        counts_dict = {"A": 0, "R": 0, "N": 0, "D": 0, "C": 0, "E": 0, "Q": 0,
+                       "G": 0, "H": 0, "I": 0, "L": 0, "K": 0, "M": 0, "F": 0,
+                       "P": 0, "S": 0, "T": 0, "W": 0, "Y": 0, "V": 0, "-": 0}
+        for char in current_column:
+            counts_dict[char] += 1
+
+        # Whilst sorting convert counts to frequencies
+        sorted_freq_dict = dict()
+        for aa, count in sorted(counts_dict.items(), key=lambda item: item[1], reverse=True):
+            freq = count / len(current_column)
+            sorted_freq_dict[aa] = freq
+        return sorted_freq_dict
+
+    def __align_mutated_protein(self, mutated_gene: MutatedGene) -> Seq:
         # Create SeqRecord object for mutated gene protein sequence
         mutated_protein_record = SeqRecord(
             mutated_gene.mutated_protein,
@@ -149,6 +171,14 @@ class ProteinFamily:
         combined_msa = self.__create_msa(combined_fasta_file, combined_msa_file)
         return combined_msa[0].seq
 
+    @staticmethod
+    def __dict_print_string(given_dict) -> str:
+        print_list = list()
+        for aa, freq in given_dict.items():
+            if freq != 0:
+                print_list.append("'{}': {:.2f}".format(aa, freq))
+        return ", ".join(print_list)
+
     def check_snp_severity(self, mutated_gene: MutatedGene):
         # Align the mutated protein
         aligned_protein = self.__align_mutated_protein(mutated_gene)
@@ -162,4 +192,20 @@ class ProteinFamily:
         affected_column = self.alignment[:, aa_position]
         freq_dict = self.__get_column_freq_dict(affected_column)
 
-        # Score...
+        # Print score/probability is the normalized frequency
+        normalized_freq_dict = self.__normalize_freq_dict(freq_dict)
+        print(f"SNP mutation has position {aa_position+1} in the MSA with "
+              f"the protein family consisting of {len(self.alignment)} genes")
+        print(f"\tAmino acid frequencies for position: " + self.__dict_print_string(freq_dict))
+        print(f"\tSeverity score: {normalized_freq_dict[mutated_aa]} (<0.05 is deleterious)")
+
+    def print_all_frequencies(self):
+        print("\nShowing amino acid frequencies for all positions:")
+        # For each column/position in the alignment
+        for i in range(self.alignment.get_alignment_length()):
+            # Get the frequency dict for that column
+            current_column = self.alignment[:, i]
+            freq_dict = self.__get_column_freq_dict(current_column)
+
+            # Print stuff
+            print(f"\tMSA Position {i + 1} ->\t" + self.__dict_print_string(freq_dict))
